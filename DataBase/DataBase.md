@@ -178,9 +178,110 @@ $$
 
 
 ## Chap4 数据库设计理论
-
-
-
+### 4.1 不好的关系模式的问题
+* **数据冗余、插入删除异常**
+### 4.2 函数依赖与范式定义
+#### 4.2.1 函数依赖
+* **函数依赖**：R(U)是属性集U上的关系模式。$X,Y\subseteq U$。若对于R(U)的任意一个关系r，以及r的任意两个元组t1,t2。**不存在**:t1[X]=t2[X]，t1[Y]=t2[Y]。则称X函数决定Y，Y函数依赖于X。记作$X\rightarrow Y$。
+  * 注：需要对R(U)上**任意一个**关系实例**成立**。
+* K是R的**候选码**，则$\forall\alpha\subset K, \alpha\nrightarrow R$
+* **完全依赖**：$X\rightarrow Y$ 对X的任意真子集$X'$，都有$X'\nrightarrow Y$。记作$X \rightarrow^f Y$
+* **部分依赖**：存在$X'\rightarrow Y$。记作$X \rightarrow^p Y$
+* **传递依赖**：$X\rightarrow Y, Y\nrightarrow X, Y\nsubseteq X, Y\rightarrow Z$。记作$X \rightarrow^t Z$
+* **非平凡的函数依赖**：$X\rightarrow Y, Y\nsubseteq X$
+  * Exp：非平凡：$(A,B)\rightarrow C$ 平凡：$(A,B)\rightarrow B$
+#### 4.2.2 范式定义
+* **范式**：关系数据库中所有关系要满足的**属性间依赖的要求**。
+* **1NF, 2NF, 3NF, BCNF, 4NF, 5NF**
+1. **1NF**：关系模式的**各属性域**必须是**原子的**。
+2. **2NF**：不存在非主属性对码的**部分依赖**。
+3. **3NF**：不存在非主属性对码的**传递依赖**。
+* **求解键码**：
+  * **不出现**在依赖中或**只出现**在依赖**左边**的，是构成键码的属性
+  * **只出现**在依赖**右边**的，**不是**构成键码的属性。
+4. **BCNF**：R的每一个函数依赖$X\rightarrow Y$，$X$是超码。
+   * **性质**：
+     1. **所有非主属性完全依赖于每个键码**。
+     2. 所有主属性完全依赖于不包含它的键码。
+     3. 没有任何属性完全依赖与任一非主属性。
+### 4.3 多值依赖与第四范式
+#### 4.3.1 多值依赖
+* **定义**：R(U), $X,Y,Z\subseteq U, Z = U-X-Y$。多值依赖$X\rightarrow\rightarrow Y$成立当且仅当R上任意一关系r，r在**X上的一个值对应唯一一组Y值**，且这组**Y值与Z的值无关**。
+* **性质**：
+  * **对称**性：若有$X\rightarrow\rightarrow Y, (Z=U-X-Y)$，则必有$X\rightarrow\rightarrow Z$
+  * 平凡的多值依赖：$X\rightarrow\rightarrow Y, Z = U-X-Y=\emptyset$
+  * 传递性：若$X\rightarrow\rightarrow Y, Y\rightarrow\rightarrow Z, (Z=U-X-Y)$，则$X\rightarrow\rightarrow Z$
+#### 4.3.2 4NF
+* 对于**每个非平凡的多值依赖**$X\rightarrow\rightarrow Y，X$都**是超码**。
+* 符合4NF的范式符合BCNF
+### 4.4 函数依赖理论
+#### 4.4.1 函数依赖的逻辑蕴涵
+* F是R给定的一组**函数依赖集合**，若能推出$X\rightarrow Y$，则记为$F\Rightarrow X\rightarrow Y$。F**蕴含**$X\rightarrow Y$
+#### 4.4.2 函数依赖的闭包
+* $F^+$：F及F所蕴含的所有函数依赖的集合
+* **Armstrong公理：**
+  * **自反**：if $\beta\subseteq\alpha$ then $\alpha \rightarrow \beta$
+  * **增广**：if $\alpha \rightarrow \beta$ then $\gamma\alpha\rightarrow\gamma\beta$
+  * **传递**：if $\alpha \rightarrow \beta, \beta \rightarrow \gamma$ then $\alpha \rightarrow \gamma$
+* **Armstrong推理**：
+  * 合并：if $\alpha \rightarrow \beta, \alpha \rightarrow \gamma$ then $\alpha \rightarrow \beta\gamma$
+  * 分解：if $\alpha \rightarrow \beta\gamma$ then $\alpha \rightarrow \beta, \alpha \rightarrow \gamma$ 
+  * 伪增广：if $X \rightarrow Y, Z \subseteq W$ then $XW \rightarrow YZ$
+  * 伪传递：if $X \rightarrow Y, WY \rightarrow Z$ then $WX \rightarrow Z$
+#### 4.4.3 属性的闭包
+* F为属性U上的一组函数依赖的集合，$\alpha,\beta\subseteq U$，则$\alpha_F^+$称为属性集$\alpha$关于函数依赖集F的闭包
+  * Exp:$R(A,B,C), F={A\rightarrow B, B\rightarrow C}, A_F^+=\{ABC\}$
+#### 4.4.4 属性闭包的用途
+* **确定键码**：AG是否为R的键码？==$R\subseteq AG^+?$
+* **判断一个函数依赖是否属于$F^+$**：
+  * Exp：$F=\{A\rightarrow B, B\rightarrow C\}, if AB\rightarrow C \in F^+?$
+  * $\because(AB)_F^+ =\{ABC\}, C\subseteq (AB)_F^+ \therefore AB\rightarrow C \in F^+$
+* **判断两个函数依赖是否等价**：
+  * 若$F^+=G^+$F与G等价，记为F=G。
+  * $F=G\Leftrightarrow F\subseteq G^+, G\subseteq F^+$
+#### 4.4.5 正则覆盖
+* **正则覆盖**：$F_m$是一个与$F$**等价**的**极小函数依赖集**，$F_m$中**无冗余函数依赖**。
+  * 每个函数依赖**右部**仅含**一个属性**。
+  * 每个函数依赖**左部没有多余**属性。
+    1. 分解右部属性，去除多余依赖(被蕴含的依赖)
+    2. 消除左部多余(分别令其中一个多余，检查多余后是否等价)
+### 4.5 关系规范化
+#### 4.5.1 模式分解
+* 把一个关系模式$R$**分解为若干不想包含的关系模式**$\{R_1,R_2,R_3\}$
+  * $R=R_1\bigcup R_2\bigcup R_3$
+#### 4.5.2 关系投影
+1. **无损接分解**：$R=R_1\bigcup R_2, r=\Pi_{R1}(r)\bowtie \Pi_{R2}(r)$
+2. **有损接分解**：$R=R_1\bigcup R_2, r\neq\Pi_{R1}(r)\bowtie \Pi_{R2}(r)$
+* 判断是否无损：$R(U,F)分解为\rho=\{R_1(U_1,F_1),R_2(U_2,F_2)\}$若$(U_1\bigcap U_2)\rightarrow (U_1-U_2)\in F^+ 或(U_1\bigcap U_2)\rightarrow (U_2-U_1)\in F^+$则**具有无损连接性**
+* 对于分解成**多个子模式**时，使用**Chase检验**
+  1. **赋初值**，Exp:R1(A,B),R2(B,C)则R1:A-a1,B-a2,C-b13,D-b14;R2:A-b21,B-a2,C-c3,D-b24
+  2. 根据依赖集F修改矩阵元:用a替换b，用x小的bxy替换大的。**直至无变化**。
+     * 当某列上的一个$b_{ij}$改为$b_{kj}$ (k＜j)或$a_j$时，应该把同一列、其它行上有取值为$b_{ij}$的矩阵元都要改成$b_{kj}$或$a_j$ 。
+  3. 有一行全为a时，分解是无损连接的。
+#### 4.5.3 依赖投影
+* $F^+=\{F_1\bigcup F_2\bigcup F_3\}$
+* $子模式R_i(U_i,F_i)，对所有A\subset U_i，计算A_F^+\bigcap U_i，依次构造F_i=\{A\rightarrow A_F^+\}$
+* **保持依赖的分解**：$(F_1\bigcup F_2 \bigcup F_3)=F^+$
+* **判定**保持函数依赖性的算法：
+  1. 计算$G=\bigcup_{i=1}^kF_i$
+  2. 若$F\subseteq G^+$则$\rho$是保持函数依赖性的。
+#### 4.5.4 模式分解的准则及相关结论
+* 一定可以**无损连接性**地分解称若干**BCNF**(even 4NF)子模式。
+* 一定可以**保持函数依赖性**地分解成若干**3NF**子模式，不一定能达BCNF。
+* 可以既无损连接性又保持函数依赖性的形成3NF子模式，不一定能形成BCNF子模式
+#### 4.5.5 无损连接分解到BCNF
+* 初始：$\rho=\{R(U_i,F_i)\}$
+1. 找出不是BCNF的关系模式$R(U_i,F_i), \exist X\rightarrow Y \in F_i, X不含R_i键码$
+2. $取A=X_{Fi}^+-X$
+3. $R_i分为R_{i1}和R_{i2}，其中：R_{i1}=X_{Fi}^+，R_{i2}=U_i-A$
+4. $计算F_i在R_{i1}和R_{i2}的投影，以及R_{i1}和R_{i2}的键码$
+#### 4.5.6 保持依赖分解到3NF
+初始模式：R(U,F)
+1. 计算F的正则覆盖$F_m$
+2. 若$F_m$中仅有一个函数依赖$X\rightarrow Y，且XY=U，则\rho=\{R(U,F_m)\}$算法结束。否则执行3.
+3. 把U中与$F_m$的所有函数依赖的**左部和右部都无关的属性**，从U中分离出去，并使它们构成一个关系模式$R_0$(至少3NF)。设$F_m$剩余的属性构成属性集$U_0'$
+4. 按照Fm中各函数依赖的左部属性，把$F_m$划分为$F_1$~$F_k$使得每个$F_i$的所有函数依赖的**左部**都相同
+5. 根据$F_i$所包含的属性构造$U_i$。并由此构造关系模式$R_i(U_i,F_i)$。对于(i≠j),若$U_i\subseteq U_j$,则把$R_i$“合并”到$R_j$。
 
 ## Chap5 SQL
 
