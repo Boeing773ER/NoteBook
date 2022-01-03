@@ -284,9 +284,149 @@ $$
 5. 根据$F_i$所包含的属性构造$U_i$。并由此构造关系模式$R_i(U_i,F_i)$。对于(i≠j),若$U_i\subseteq U_j$,则把$R_i$“合并”到$R_j$。
 
 ## Chap5 SQL
-
-
-
+### 5.1 SQL概述
+* SQL-Structured Query Language
+* **特点**：综合统一、**高度非过程化**、**面向集合**的操作方法、既是自含式语言，又是嵌入式语言、语言简洁，语法简单。
+### 5.2 查询语句基本结构
+* Select ** From ** Where **;
+  * Select = $\Pi$(投影)
+  * Where = $\sigma$(条件)
+* **查询结果为包**(bag)。
+#### 5.2.1 Select子句
+* Select后列出需要查询的属性，**允许**出现**重复元组**。
+* **消重**：distinct；**不消重**：all。
+* '*'表示所有属性；可以使用**四则运算表达式**对数字结果进行运算。
+#### 5.2.2 Where子句
+* 检索条件，使用'and','or'连接
+#### 5.2.3 From子句
+* 查询的数据源
+* select * from A, B--查询A x B的所有信息
+#### 5.2.4 改名运算
+* 可改**属性名**与**关系名**
+```SQL
+Select A.Count as AC From Apple as A, Bear as B
+```
+#### 5.2.5 字符串运算
+* 匹配运算符'**like**'
+* '%'匹配任意长度子串；'_'匹配长度为1的子串。
+```SQL
+Where Maker like '%Boeing%'
+```
+* 通过转义字符'\'将'%','_'变为普通字符。
+#### 5.2.6 排列元组
+* 'order by' (属性) Desc(降序)/Asc(升序)
+#### 5.2.7 集合运算
+* union $\bigcup$；intersect $\bigcap$；except '-'
+* 在两个查找结果间运算
+* **自动删除重复元组**；保留重复元组在命令后+'all'。
+#### 5.2.8 聚集函数
+* **avg, min, max, sum, count**。
+```SQL
+Select avg(balance) From account where branch-name='A';
+Select count(*) form account;
+```
+* **select后不在聚集函数中的属性必须出现在group by子句中**。
+```SQL
+Select branch-name, avg(balance) 
+From account group by branch-name having avg(balance)>500;
+```
+* having出现在Group by后，是**分组统计后的输出条件**，where是**查询条件**。
+#### 5.2.9 空值Null Values
+* 'null'信息确实或不确定；用'is null'进行测试
+* **涉及null的数学运算结果为null**；聚集函数忽略null；null**与任意值比较**返回unknown
+* 'unknown'是三种布尔值的一种。在where的条件子句中，返回**unknown当false处理**。
+#### 5.2.10 嵌套子查询
+* **in, not in, 集合比较(some, any, all), exist, unique**。
+* 一个查询可以使用另一个查询的结果。
+```SQL
+集合运算：
+(SELECT customer-num FROM depositor)
+intersect
+(SELECT customer-num FROM borrower)
+嵌套子查询：
+SELECT distinct customer-num FROM borrower where customer-num
+in(SELECT customer-num from depositor)
+```
+资产比位于Brooklyn的**某一家**支行高的支行名
+```SQL
+集合比较：
+SELECT branch-num FROM branch WHERE assets >
+some(SELECT assets FROM branch WHERE branch-city = 'Brooklyn')
+```
+* **相关子查询**：内层查询涉及到外层查询的数据。可以是exist, 比较运算, IN。
+* 空集测试'exists'
+```SQL
+SELECT customer-num FROM borrower as b WHERE exists 
+(SELECT * FROM depositor as d WHERE d.coustomername=b.coustomername)
+```
+#### 5.2.11 连接运算(SQL2)
+* FROM table1 join_type table2 [ON〈连接条件表达式〉]
+* A inner join B 取交集。
+* A left join B 取 A 全部，B 没有对应的值为 null。
+* A right join B 取 B 全部 A 没有对应的值为 null。
+* A full outer join B 取并集，彼此没有对应的值为 null。
+* 自然连接'natural'：**自动省略连接关键字**。
+* 'using'用法
+```SQL
+SELECT * FROM book JOIN borrow USING (book_id);
+SELECT * FROM book JOIN borrow WHERE book.book_id = borrow.book_id;
+```
+### 5.3 数据定义语句
+* 功能：定义数据库、关系、索引、约束、视图、完全、物理存贮结构等
+* 创建(CREATE)，删除(DROP)，修改(ALTER，只有表)
+#### 5.3.1 创建表
+```SQL
+CREATE TABLE <表名>(
+<列名><数据类型>[列级完整性约束定义],
+表级完整性约束定义
+);
+CREATE TABLE stand(
+    airport_IATA_code varchar(20) not null,
+    stand_num         varchar(20) not null,
+    primary key (airport_IATA_code, stand_num),
+    foreign key (airport_IATA_code) references airport (airport_IATA_code)
+);
+```
+* **允许的完整性约束**：
+  * primary key(A1,...,An) 主码约束
+  * foreign key() references tableA() 外码约束
+  * not null 非空约束
+  * unique 取值唯一约束
+  * default(默认值) 缺省值约束
+  * check(P) 取指范围约束
+#### 5.3.2 删除表或修改表结构
+```SQL
+删除表：DROP TABLE <表名>
+修改表：
+ALTER TABLE <表名>
+    ALTER COLUMN <列名><新数据类型>
+    ADD [COLUMN] <列名><数据类型>[约束]
+    DROP COLUMN <列名>
+    ADD PRIMARY KEY (列名,列名)
+    ADD FOREIGN KEY (列名) references table <表名>(列名);
+```
+#### 5.3.3 创建和删除索引
+* **索引目的**：**加快查询速度**。
+```SQL
+创建：CREATE INDEX Indamount ON brach(amount ASC, balance DESC);
+删除：DROP INDEX Indamount;
+```
+#### 5.3.4 创建和删除视图
+* 视图是**虚表**，**从用户的角度隐藏数据**，简化查询书写方式的机制
+* **作用**：**保护数据**，**简化查询**。
+```SQL
+CREATE VIEW v1 as <查询语句>
+DROP VIEW v1
+```
+* 查询时视图当表使用
+### 5.4 数据更新语句
+* 插入(insert), 删除(delete), 更新(upadate)
+```SQL
+数据删除：DELETE FROM <表名> WHERE <条件>
+数据插入：INSERT INTO <表名>[(属性1,属性2)] values(值1,值2)
+数据更新：UPDATE <表名> SET <列名>=<表达式> WHERE <条件>
+update account set balance = balance*1.06 where balance > 10000
+```
 
 ## Chap6 SQL约束
 
